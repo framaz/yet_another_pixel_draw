@@ -9,6 +9,7 @@ from math import ceil
 
 SMALLEST_SQUARE_SIZE = 128
 
+
 class CurrentFieldSerializer(serializers.ModelSerializer):
     def save(self, user):
         x = self.validated_data['x']
@@ -32,18 +33,26 @@ class NewFieldSerializer(serializers.Serializer):
             shape=(
                 ceil(img.shape[0] / SMALLEST_SQUARE_SIZE),
                 ceil(img.shape[1] / SMALLEST_SQUARE_SIZE)
-                ),
+            ),
             dtype=np.object
         )
         for i in range(field.shape[0]):
             for j in range(field.shape[0]):
-                field[i, j] = img[i * SMALLEST_SQUARE_SIZE : (i + 1) * SMALLEST_SQUARE_SIZE,
-                              j * SMALLEST_SQUARE_SIZE : (j + 1) * SMALLEST_SQUARE_SIZE]
+                field[i, j] = img[i * SMALLEST_SQUARE_SIZE: (i + 1) * SMALLEST_SQUARE_SIZE,
+                              j * SMALLEST_SQUARE_SIZE: (j + 1) * SMALLEST_SQUARE_SIZE]
         cache.set('level0', field, None)
+
 
 class GetGridSerializer(serializers.Serializer):
     x = serializers.IntegerField()
     y = serializers.IntegerField()
     size = serializers.IntegerField()
+
+    def get_proper_field(self):
+        x = self.validated_data['x']
+        y = self.validated_data['y']
+        size = self.validated_data['size']
+        grid = cache.get(f'level{size}')
+        return grid[x, y]
 
 # {"x": 1, "y": 1, "color": "#111111"}

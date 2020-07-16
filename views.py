@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.parsers import FileUploadParser
-
+from json import dumps
 
 # Create your views here.
 class UpdatePixel(APIView):
@@ -35,10 +35,11 @@ class UploadPicture(APIView):
 
 class GetPixelFromGrid(APIView):
     def get(self, request, format=None):
-        serializer = serializers.GetGridSerialiser(data=request.data)
+        serializer = serializers.GetGridSerializer(data=request.data)
         if serializer.is_valid():
-            x = serializer.validated_data['x']
-            y = serializer.validated_data['y']
-            size = serializer.validated_data['size']
+            field = serializer.get_proper_field()
+            return Response(data=dumps(field.tolist()), status=status.HTTP_200_OK)
+        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
