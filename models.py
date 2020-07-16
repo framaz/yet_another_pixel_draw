@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class PixelHistory(models.Model):
@@ -18,14 +19,5 @@ class PixelHistory(models.Model):
 class FieldHistory(models.Model):
     field = models.BinaryField()
     date = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(User, null=True, default=None, on_delete=models.DO_NOTHING)
 
-
-class CurrentField(models.Model):
-    x = models.IntegerField(null=False)
-    y = models.IntegerField(null=False)
-    color = models.CharField(max_length=7, default="#000000")
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['x', 'y'], name="Primary Key"),
-        ]
