@@ -17,6 +17,41 @@
 <script type="text/babel">
 var lastX, lastY;
 var isMouseDown = false;
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+async function smartFetch(url, json_body) {
+  return await fetch(url, {
+    credentials: "include",
+    }
+  )
+}
+class GridQueue {
+  constructor(canvasReact) {
+    this.canvasReact = canvasReact;
+    this.queue = [];
+  }
+  async work() {
+    while(true) {
+      while (this.queue.length > 0) {
+        var curTask = this.queue.shift();
+        var res = await fetch(`{% url 'get_grid_size' %}${curTask.size}/${curTask.x}/${curTask.y}/`)
+        res = await res.json();
+        res = JSON.parse(res);
+        this.canvasReact.grids[curTask.size][curTask.x][curTask.y] = res;
+      }
+      await sleep(2000);
+    }
+  }
+  append(x, y, size) {
+  if (this.queue.length != 0) {
+    if (this.queue[0].size != size) {
+      this.queue = []
+    }
+  }
+  this.queue.push({"x": x, "y": y, "size": size});
+  }
+};
 class Canvas extends React.Component {
   constructor(props){
     super(props);
@@ -24,6 +59,8 @@ class Canvas extends React.Component {
     this.y = 0;
     this.size = 0;
     this.grids = {}
+    this.gridLoading = new GridQueue(this);
+    this.gridLoading.work();
   }
   move(additionalX, additionalY) {
     this.x += additionalX
@@ -69,13 +106,11 @@ class Canvas extends React.Component {
     );
   }
   async componentDidMount() {
-    this.gridData = await fetch("{% url "get_grid_size" %}");
+    this.gridData = await fetch("{% url 'get_grid_size' %}");
     this.gridData = await this.gridData.json();
     this.gridData = JSON.parse(this.gridData);
-    console.log(this.gridData);
-    for(var i = 0; i < 10; i++)
+    for (var i = 0; i < 10; i++)
       this.grids[i] = Array(this.gridData[i][0], this.gridData[i][1]);
-    console.log(this.grids)
   }
   componentDidUpdate() {
     var canvas = this.refs.canvas.getContext("2d");
