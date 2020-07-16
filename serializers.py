@@ -19,8 +19,6 @@ class CurrentFieldSerializer(serializers.ModelSerializer):
         color = self.validated_data['color']
         models.PixelHistory.objects.create(x=x, y=y, color=color, user=user)
         color = np.array(loads(color))
-        x_grid = divmod(x, SMALLEST_SQUARE_SIZE)
-        y_grid = divmod(y, SMALLEST_SQUARE_SIZE)
 
         x_grid, x_in_grid = divmod(x, SMALLEST_SQUARE_SIZE)
         y_grid, y_in_grid = divmod(y, SMALLEST_SQUARE_SIZE)
@@ -54,7 +52,8 @@ class NewFieldSerializer(serializers.Serializer):
             for i in range(0, field.shape[0]):
                 for j in range(0, field.shape[1]):
                     cache.set(f'level{grid_count}_{i}_{j}', field[i, j], None)
-            pil_img = pil_img.resize(size=(ceil(img.shape[0] / 2), ceil(img.shape[1] / 2)), resample=Image.BOX)
+            cache.set(f'grid_size_{grid_count}', field.shape, None)
+            pil_img = pil_img.resize(size=(ceil(img.shape[1] / 2), ceil(img.shape[0] / 2)), resample=Image.BOX)
             img = np.array(pil_img)
 
     def _get_grid(self, img):

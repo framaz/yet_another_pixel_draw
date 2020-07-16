@@ -1,13 +1,14 @@
-from django.shortcuts import render
-from django.views.generic import TemplateView
-from rest_framework.views import APIView
-from yet_another_pixel_draw import serializers
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.parsers import FileUploadParser
 from json import dumps
+
 from django.core.cache import cache
+from django.views.generic import TemplateView
+from rest_framework import status
+from rest_framework.parsers import FileUploadParser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from yet_another_pixel_draw import serializers
 
 
 # Create your views here.
@@ -49,8 +50,8 @@ class GetGridSize(APIView):
     def get(self, request, format=None):
         res = {}
         for i in range(serializers.MAX_GRID_SIZE):
-            grid = cache.get(f"level{i}")
-            res[i] = grid.shape
+            res[i] = cache.get(f"grid_size_{i}")
+            res[i] = [*(res[i])]
         return Response(data=dumps(res), status=status.HTTP_200_OK)
 
 
