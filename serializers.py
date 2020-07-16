@@ -1,7 +1,13 @@
 from rest_framework import serializers
 from yet_another_pixel_draw import models
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
+from django.core.cache import cache
+from PIL import Image
+import numpy as np
+from math import ceil
 
+SMALLEST_SQUARE_SIZE = 128
 
 class CurrentFieldSerializer(serializers.ModelSerializer):
     def save(self, user):
@@ -9,14 +15,9 @@ class CurrentFieldSerializer(serializers.ModelSerializer):
         y = self.validated_data['y']
         color = self.validated_data['color']
         models.PixelHistory.objects.create(x=x, y=y, color=color, user=user)
-        try:
-            res = models.CurrentField.objects.all().filter(x=x, y=y)[0]
-            self.update(res, validated_data=self.validated_data)
-        except ObjectDoesNotExist:
-            super().save()
 
     class Meta:
-        model = models.CurrentField
+        model = models.PixelHistory
         fields = ['x', 'y', 'color']
 
 
