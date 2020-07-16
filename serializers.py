@@ -8,6 +8,7 @@ import numpy as np
 from math import ceil
 
 SMALLEST_SQUARE_SIZE = 128
+MAX_GRID_SIZE = 10
 
 
 class CurrentFieldSerializer(serializers.ModelSerializer):
@@ -26,9 +27,17 @@ class NewFieldSerializer(serializers.Serializer):
     file = serializers.ImageField()
 
     def save(self, user, **kwargs):
-        img = self.validated_data['file'].file
-        img = Image.open(img)
-        img = np.array(img)
+        pil_img = self.validated_data['file'].file
+        pil_img = Image.open(pil_img)
+        pil_img = pil_img.convert(mode="RGB")
+        img = np.array(pil_img)
+        for grid_count in range(MAX_GRID_SIZE):
+            field = self._get_grid(img)
+            cache.set(f'level{grid_count}', field, None)
+            pil_img = pil_img.resize(size=(ceil(img.shape[0]/2), ceil(img.shape[1]/2)))
+            img = np.array(pil_img)
+
+    def _get_grid(self, img):
         field = np.ndarray(
             shape=(
                 ceil(img.shape[0] / SMALLEST_SQUARE_SIZE),
@@ -40,7 +49,7 @@ class NewFieldSerializer(serializers.Serializer):
             for j in range(field.shape[0]):
                 field[i, j] = img[i * SMALLEST_SQUARE_SIZE: (i + 1) * SMALLEST_SQUARE_SIZE,
                               j * SMALLEST_SQUARE_SIZE: (j + 1) * SMALLEST_SQUARE_SIZE]
-        cache.set('level0', field, None)
+        return field
 
 
 class GetGridSerializer(serializers.Serializer):
