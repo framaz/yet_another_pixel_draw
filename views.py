@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.views.generic import TemplateView
 from rest_framework.views import APIView
 from yet_another_pixel_draw import serializers
 from rest_framework.response import Response
@@ -40,6 +41,10 @@ class GetPixelFromGrid(APIView):
             field = serializer.get_proper_field()
             return Response(data=dumps(field.tolist()), status=status.HTTP_200_OK)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class FrontEnd(TemplateView):
+    template_name = "yapd/front_end.html"
+
 
 
 
