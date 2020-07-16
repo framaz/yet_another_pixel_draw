@@ -38,8 +38,8 @@ class UploadPicture(APIView):
 
 
 class GetPixelFromGrid(APIView):
-    def get(self, request, format=None):
-        serializer = serializers.GetGridSerializer(data=request.data)
+    def get(self, request, size, x, y, format=None):
+        serializer = serializers.GetGridSerializer(data={"x": x, "size": size, "y": y})
         if serializer.is_valid():
             field = serializer.get_proper_field()
             return Response(data=dumps(field.tolist()), status=status.HTTP_200_OK)
