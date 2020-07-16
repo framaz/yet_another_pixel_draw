@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 class PixelHistory(models.Model):
     x = models.IntegerField(null=False)
     y = models.IntegerField(null=False)
-    color = models.CharField(max_length=7, default="#000000")
+    color = models.CharField(default="[0, 0, 0]", max_length=20)
     date = models.DateTimeField(auto_now=True)
     user = models.ForeignKey('auth.User', on_delete=models.DO_NOTHING)
 
