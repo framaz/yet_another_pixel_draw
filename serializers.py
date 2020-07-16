@@ -21,7 +21,27 @@ class CurrentFieldSerializer(serializers.ModelSerializer):
         fields = ['x', 'y', 'color']
 
 
-class GetGridSerialiser(serializers.Serializer):
+class NewFieldSerializer(serializers.Serializer):
+    file = serializers.ImageField()
+
+    def save(self, user, **kwargs):
+        img = self.validated_data['file'].file
+        img = Image.open(img)
+        img = np.array(img)
+        field = np.ndarray(
+            shape=(
+                ceil(img.shape[0] / SMALLEST_SQUARE_SIZE),
+                ceil(img.shape[1] / SMALLEST_SQUARE_SIZE)
+                ),
+            dtype=np.object
+        )
+        for i in range(field.shape[0]):
+            for j in range(field.shape[0]):
+                field[i, j] = img[i * SMALLEST_SQUARE_SIZE : (i + 1) * SMALLEST_SQUARE_SIZE,
+                              j * SMALLEST_SQUARE_SIZE : (j + 1) * SMALLEST_SQUARE_SIZE]
+        cache.set('level0', field, None)
+
+class GetGridSerializer(serializers.Serializer):
     x = serializers.IntegerField()
     y = serializers.IntegerField()
     size = serializers.IntegerField()
