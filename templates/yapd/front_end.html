@@ -23,7 +23,7 @@ class Canvas extends React.Component {
     this.x = 0;
     this.y = 0;
     this.size = 0;
-    this.grids = Array
+    this.grids = {}
   }
   move(additionalX, additionalY) {
     this.x += additionalX
@@ -31,7 +31,7 @@ class Canvas extends React.Component {
   }
   render() {
     return (
-      <canvas ref='canvas' width={200} length={200} onMouseMove={(evt) =>
+      <canvas ref='canvas' width={window.innerWidth} height={window.innerHeight} onMouseMove={(evt) =>
       {
         if(isMouseDown){
           evt.persist();
@@ -67,6 +67,15 @@ class Canvas extends React.Component {
       }}>
       </canvas>
     );
+  }
+  async componentDidMount() {
+    this.gridData = await fetch("{% url "get_grid_size" %}");
+    this.gridData = await this.gridData.json();
+    this.gridData = JSON.parse(this.gridData);
+    console.log(this.gridData);
+    for(var i = 0; i < 10; i++)
+      this.grids[i] = Array(this.gridData[i][0], this.gridData[i][1]);
+    console.log(this.grids)
   }
   componentDidUpdate() {
     var canvas = this.refs.canvas.getContext("2d");
