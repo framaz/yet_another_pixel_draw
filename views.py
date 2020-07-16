@@ -7,6 +7,8 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.parsers import FileUploadParser
 from json import dumps
+from django.core.cache import cache
+
 
 # Create your views here.
 class UpdatePixel(APIView):
@@ -42,9 +44,15 @@ class GetPixelFromGrid(APIView):
             return Response(data=dumps(field.tolist()), status=status.HTTP_200_OK)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class GetGridSize(APIView):
+    def get(self, request, format=None):
+        res = {}
+        for i in range(serializers.MAX_GRID_SIZE):
+            grid = cache.get(f"level{i}")
+            res[i] = grid.shape
+        return Response(data=dumps(res), status=status.HTTP_200_OK)
+
+
 class FrontEnd(TemplateView):
     template_name = "yapd/front_end.html"
-
-
-
-

@@ -1,12 +1,12 @@
-from rest_framework import serializers
-from yet_another_pixel_draw import models
-from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction
-from django.core.cache import cache
-from PIL import Image
-import numpy as np
+from json import loads
 from math import ceil, floor
-from json import dumps, loads
+
+import numpy as np
+from PIL import Image
+from django.core.cache import cache
+from rest_framework import serializers
+
+from yet_another_pixel_draw import models
 
 SMALLEST_SQUARE_SIZE = 128
 MAX_GRID_SIZE = 10
@@ -19,21 +19,22 @@ class CurrentFieldSerializer(serializers.ModelSerializer):
         color = self.validated_data['color']
         models.PixelHistory.objects.create(x=x, y=y, color=color, user=user)
         color = np.array(loads(color))
+        x_grid = divmod(x, SMALLEST_SQUARE_SIZE)
+        y_grid = divmod(y, SMALLEST_SQUARE_SIZE)
 
         x_grid, x_in_grid = divmod(x, SMALLEST_SQUARE_SIZE)
         y_grid, y_in_grid = divmod(y, SMALLEST_SQUARE_SIZE)
-        cur_grid = cache.get('level0')
-        color_orig = cur_grid[x_grid, y_grid][x_in_grid, y_in_grid]
+        cur_grid = cache.get(f'level0_{x_grid}_{y_grid}')
+        color_orig = cur_grid[x_in_grid, y_in_grid]
 
         for grid_num in range(MAX_GRID_SIZE):
-            x_grid, x_in_grid = divmod(x,  SMALLEST_SQUARE_SIZE * 2 ** grid_num)
-            y_grid, y_in_grid = divmod(y,  SMALLEST_SQUARE_SIZE * 2 ** grid_num)
-            cur_grid = cache.get(f'level{grid_num}')
+            x_grid, x_in_grid = divmod(x, SMALLEST_SQUARE_SIZE * 2 ** grid_num)
+            y_grid, y_in_grid = divmod(y, SMALLEST_SQUARE_SIZE * 2 ** grid_num)
+            cur_grid = cache.get(f'level{grid_num}_{x_grid}_{y_grid}')
             x_in_grid = floor(x_in_grid / (2 ** grid_num))
             y_in_grid = floor(y_in_grid / (2 ** grid_num))
-            cur_grid[x_grid, y_grid][x_in_grid, y_in_grid] += ((color - color_orig) / (4 ** grid_num)).astype(np.uint8)
-            cache.set(f'level{grid_num}', cur_grid, None)
-
+            cur_grid[x_in_grid, y_in_grid] += ((color - color_orig) / (4 ** grid_num)).astype(np.uint8)
+            cache.set(f'level{grid_num}_{x_grid}_{y_grid}', cur_grid, None)
 
     class Meta:
         model = models.PixelHistory
@@ -50,8 +51,10 @@ class NewFieldSerializer(serializers.Serializer):
         img = np.array(pil_img)
         for grid_count in range(MAX_GRID_SIZE):
             field = self._get_grid(img)
-            cache.set(f'level{grid_count}', field, None)
-            pil_img = pil_img.resize(size=(ceil(img.shape[0]/2), ceil(img.shape[1]/2)), resample=Image.BOX)
+            for i in range(0, field.shape[0]):
+                for j in range(0, field.shape[1]):
+                    cache.set(f'level{grid_count}_{i}_{j}', field[i, j], None)
+            pil_img = pil_img.resize(size=(ceil(img.shape[0] / 2), ceil(img.shape[1] / 2)), resample=Image.BOX)
             img = np.array(pil_img)
 
     def _get_grid(self, img):
@@ -78,7 +81,10 @@ class GetGridSerializer(serializers.Serializer):
         x = self.validated_data['x']
         y = self.validated_data['y']
         size = self.validated_data['size']
-        grid = cache.get(f'level{size}')
-        return grid[x, y]
+        grid = cache.get(f'level{size}_{x}_{y}')
+        return grid
 
+
+class GridSize(serializers.Serializer):
+    size = serializers.IntegerField()
 # {"x": 1, "y": 1, "color": "#111111"}
