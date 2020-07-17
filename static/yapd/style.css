@@ -1,0 +1,20 @@
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden
+}
+
+.UserCred {
+  font-family: sans-serif;
+  text-align: left;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background-color: orange;
+}
+canvas {
+  display: block;
+  position: fixed;
+  left: 0;
+  top: 0;
+}
