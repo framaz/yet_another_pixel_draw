@@ -11,10 +11,12 @@ html, body {
   left: 0;
   top: 0;
   background-color: orange;
+  z-index: 10;
 }
 canvas {
   display: block;
   position: fixed;
   left: 0;
   top: 0;
+  z-index: 0;
 }

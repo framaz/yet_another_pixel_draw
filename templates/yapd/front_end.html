@@ -154,6 +154,7 @@ class Canvas extends React.Component {
       for (var j = 0; j < data[0]; j++)
         this.grids[i][j] = Array(data[1]);
     }
+    this.forceUpdate();
   }
   componentDidUpdate() {
     var cvx = this.refs.canvas.getContext("2d");
@@ -299,7 +300,7 @@ class LoginForm extends React.Component {
 ReactDOM.render(
   <div>
     <Canvas />,
-    <UserName loggedIn="false" />
+    <UserName loggedIn="{{ request.user.is_authenticated|lower }}" />
   </div>,
   root
 )
