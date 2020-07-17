@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,18 +8,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>React Local</title>
-  <script type="application/javascript" src="https://unpkg.com/react@16.0.0/umd/react.production.min.js"></script>
-  <script type="application/javascript" src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/react@16.3.0/umd/react.production.min.js" type="application/javascript"></script>
+  <script src="https://unpkg.com/react-dom@16.3.0/umd/react-dom.production.min.js"
+          type="application/javascript"></script>
   <script type="application/javascript" src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+
+  <script src="https://unpkg.com/form-serialization@0.11.0/dist/index.js" type="application/javascript"></script>
+  <script src="https://unpkg.com/js-cookie@2.2.0/src/js.cookie.js" type="application/javascript"></script>
+  <link href="{% static 'yapd/style.css' %}" rel="stylesheet" type="text/css">
 </head>
 
 <body>
-  <div id="root"></div>
-
+<div id="root"></div>
+{% csrf_token %}
 <script type="text/babel">
 const GRID_SIZE = 128;
 var lastX, lastY;
 var isMouseDown = false;
+function getCookie(name) {
+    var cookieValue = Cookies.get(name);
+    return cookieValue;
+}
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -177,10 +188,121 @@ class Canvas extends React.Component {
   }
 }
 
-    ReactDOM.render(
-      <Canvas />,
-      root
-    )
+class UserName extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      loggedIn: props.loggedIn === "true",
+    };
+    this.loginSuccess = this.loginSuccess.bind(this);
+  }
+  loginSuccess () {
+    this.setState ({
+      loggedIn: true,
+    });
+  }
+  render() {
+    if (this.state.loggedIn) {
+      return (
+        <div class="UserCred" >
+          <br />
+        </div>
+      );
+    } else {
+      return (
+        <div class="UserCred" >
+          <LoginForm loginSuccess={this.loginSuccess}/>
+        </div>
+      );
+    }
+  }
+}
+class LoginForm extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.loginSuccess = props.loginSuccess;
+
+    this.state = { hideWrongPassword: true
+    }
+    this.formRef = React.createRef();
+    this._handleSubmit = this._handleSubmit.bind(this);
+  }
+  async _handleSubmit(e) {
+    e.preventDefault();
+    var loginForm = this.formRef.current;
+    var data = FormSerialize.serialize(loginForm);
+
+    var csrf = document.getElementsByName("csrfmiddlewaretoken")[0].value;
+    document.cookie = "csrftoken=" + csrf;
+    data += "&next={% url 'frontend' %}";
+    var response = await fetch("{% url "login" %}", {
+      method: 'POST',
+      headers: {
+      "Content-type": "application/x-www-form-urlencoded",
+      "X-CSRFToken": csrf,
+      },
+      body: data,
+      redirect: "manual"
+    });
+    if (response.type != "opaqueredirect")
+      this.setState({hideWrongPassword: false})
+    else
+      this.loginSuccess();
+
+  }
+  render() {
+    return (
+      <form className="form" onSubmit={this._handleSubmit} ref={this.formRef} action=''>
+        <table>
+          <tr>
+            <td>
+              <label for="id_username">Username:</label>
+            </td>
+            <td>
+              <input
+                type="text"
+                name="username"
+                autocapitalize="none"
+                autocomplete="username"
+                maxlength="150"
+                required
+                id="id_username"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label for="id_password">Password:</label>
+            </td>
+            <td>
+              <input
+                type="password"
+                name="password"
+                autocomplete="current-password"
+                required
+                id="id_password"
+              />
+            </td>
+          </tr>
+        </table>
+
+        <input type="submit" value="login" />
+        <text hidden={this.state.hideWrongPassword}> Wrong Password </text>
+      </form>
+    );
+  }
+}
+
+
+
+ReactDOM.render(
+  <div>
+    <Canvas />,
+    <UserName loggedIn="false" />
+  </div>,
+  root
+)
 </script>
 
 </body>
