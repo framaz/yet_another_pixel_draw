@@ -71,17 +71,17 @@ class NewFieldSerializer(serializers.Serializer):
         return field
 
 
-class GetGridSerializer(serializers.Serializer):
-    x = serializers.IntegerField()
-    y = serializers.IntegerField()
-    size = serializers.IntegerField()
-
+class GetGridSerializer(serializers.ModelSerializer):
     def get_proper_field(self):
         x = self.validated_data['x']
         y = self.validated_data['y']
         size = self.validated_data['size']
         grid = cache.get(f'level{size}_{x}_{y}')
         return grid
+
+    class Meta:
+        model = models.CurrentField
+        fields = ["x", "y", "size"]
 
 
 class GridSize(serializers.Serializer):

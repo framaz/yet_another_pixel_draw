@@ -1,6 +1,8 @@
 from json import dumps
 
 from django.core.cache import cache
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django.views.generic import TemplateView
 from rest_framework import status
 from rest_framework.parsers import FileUploadParser
@@ -37,7 +39,11 @@ class UploadPicture(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
+GRID_CACHING = 60
+
+
 class GetPixelFromGrid(APIView):
+    @method_decorator(cache_page(GRID_CACHING))
     def get(self, request, size, x, y, format=None):
         serializer = serializers.GetGridSerializer(data={"x": x, "size": size, "y": y})
         if serializer.is_valid():
@@ -47,6 +53,7 @@ class GetPixelFromGrid(APIView):
 
 
 class GetGridSize(APIView):
+    @method_decorator(cache_page(GRID_CACHING))
     def get(self, request, format=None):
         res = {}
         for i in range(serializers.MAX_GRID_SIZE):
