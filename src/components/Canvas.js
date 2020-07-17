@@ -16,47 +16,54 @@ export default class Canvas extends React.Component {
     this.grids = {}
     this.gridLoading = new GridQueue(this);
     this.gridLoading.work();
+
+    this.mouseMove = this.mouseMove.bind(this);
+    this.mouseDown = this.mouseDown.bind(this);
+    this.mouseUp = this.mouseUp.bind(this);
+    this.wheel = this.wheel.bind(this);
   }
   move(additionalX, additionalY) {
     this.x -= additionalX;
     this.y -= additionalY;
   }
+  mouseMove(evt) {
+    if(isMouseDown){
+      evt.persist();
+      var curX = evt.clientX;
+      var curY = evt.clientY;
+      this.move(curX - lastX, curY - lastY);
+      lastY = curY;
+      lastX = curX;
+      this.forceUpdate()
+    }
+  }
+  mouseDown(evt) {
+    isMouseDown = true;
+    lastX = evt.clientX;
+    lastY = evt.clientY;
+  }
+  mouseUp(evt) {
+    isMouseDown = false;
+  }
+  wheel(evt) {
+    evt.persist();
+    if (evt.deltaY > 0)
+    {
+      if (this.size < 9)
+         this.size = this.size + 1
+    }
+    if (evt.deltaY < 0)
+    {
+      if (this.size > 0)
+         this.size = this.size - 1
+    }
+  }
   render() {
     return (
-      <canvas ref='canvas' width={window.innerWidth} height={window.innerHeight} onMouseMove={(evt) =>
-      {
-        if(isMouseDown){
-          evt.persist();
-          var curX = evt.clientX;
-          var curY = evt.clientY;
-          this.move(curX - lastX, curY - lastY);
-          lastY = curY;
-          lastX = curX;
-          this.forceUpdate()
-        }
-      }}
-      onMouseDown={(evt) => {
-         isMouseDown = true;
-         lastX = evt.clientX;
-         lastY = evt.clientY;
-
-      }}
-      onMouseUp={(evt) => {
-        isMouseDown = false;
-      }}
-      onWheel={(evt) => {
-        evt.persist();
-        if (evt.deltaY > 0)
-        {
-          if (this.size < 9)
-             this.size = this.size + 1
-        }
-        if (evt.deltaY < 0)
-        {
-          if (this.size > 0)
-             this.size = this.size - 1
-        }
-      }}>
+      <canvas ref='canvas' width={window.innerWidth} height={window.innerHeight} onMouseMove={this.mouseMove}
+      onMouseDown={this.mouseDown}
+      onMouseUp={this.mouseUp}
+      onWheel={this.wheel}>
       </canvas>
     );
   }
