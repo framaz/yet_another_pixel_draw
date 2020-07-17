@@ -1,5 +1,5 @@
 import React from "react";
-
+import { ChromePicker } from 'react-color';
 import GridQueue from "./GridQueue";
 
 var lastX, lastY;
@@ -17,7 +17,12 @@ export default class Canvas extends React.Component {
     this.grids = {}
     this.gridLoading = new GridQueue(this);
     this.gridLoading.work();
+    this.drawColor = []
+    this.color = {r: 0, g: 0, b: 0}
+    this.lastY = 0;
+    this.lastX = 0;
 
+    this.colorChange = this.colorChange.bind(this);
     this.mouseMove = this.mouseMove.bind(this);
     this.mouseDown = this.mouseDown.bind(this);
     this.mouseUp = this.mouseUp.bind(this);
@@ -28,27 +33,31 @@ export default class Canvas extends React.Component {
     this.y -= additionalY;
   }
   mouseMove(evt) {
+
+    evt.persist();
+    var curX = evt.clientX;
+    var curY = evt.clientY;
+    var lastX = this.lastX, lastY=this.lastY;
+    this.lastY = curY;
+    this.lastX = curX;
     if(isMouseDown){
-      evt.persist();
-      var curX = evt.clientX;
-      var curY = evt.clientY;
       this.move(curX - lastX, curY - lastY);
-      lastY = curY;
-      lastX = curX;
-      this.forceUpdate()
     }
+    this.forceUpdate();
   }
   mouseDown(evt) {
     isMouseDown = true;
-    lastX = evt.clientX;
-    lastY = evt.clientY;
+    this.lastX = evt.clientX;
+    this.lastY = evt.clientY;
   }
   mouseUp(evt) {
     isMouseDown = false;
   }
+  colorChange(color) {
+    this.color = color.rgb;
+  }
   mouseClick(evt) {
   }
-
   wheel(evt) {
     evt.persist();
     if (evt.deltaY > 0)
@@ -71,11 +80,16 @@ export default class Canvas extends React.Component {
   }
   render() {
     return (
+    <div>
+      <div class='colorSelect'>
+        <ChromePicker disableAlpha={true} color={this.color} onChange={this.colorChange}/>
+      </div>
       <canvas ref='canvas' width={window.innerWidth} height={window.innerHeight} onMouseMove={this.mouseMove}
       onMouseDown={this.mouseDown}
       onMouseUp={this.mouseUp}
       onWheel={this.wheel}>
       </canvas>
+    </div>
     );
   }
   async componentDidMount() {
@@ -125,7 +139,17 @@ export default class Canvas extends React.Component {
     }
     cvx.drawImage(this.refs.canvas, 0, 0, screenWidth / this.zoomIn, screenHeight / this.zoomIn,
      0, 0, screenWidth, screenHeight);
-
+    if (this.size == 0 && this.zoomIn >= 4) {
+      cvx.fillStyle = "black";
+      var curPixelX = Math.floor((this.lastX - x * this.zoomIn) / this.zoomIn);
+      var curPixelY = Math.floor((this.lastY - y * this.zoomIn) / this.zoomIn);
+      curPixelX = (curPixelX + x) * this.zoomIn;
+      curPixelY = (curPixelY + y) * this.zoomIn;
+      cvx.fillRect(curPixelX - 2, curPixelY - 2, this.zoomIn + 4, this.zoomIn + 4);
+      cvx.fillStyle = rgb(this.color.r, this.color.g, this.color.b);
+      cvx.fillRect(curPixelX, curPixelY, this.zoomIn, this.zoomIn);
+    }
+    cvx.fillStyle = "black";
   }
 }
 
@@ -150,4 +174,8 @@ function drawPic(array, ctx, x_coord, y_coord) {
 
   // update canvas with new data
   ctx.putImageData(idata, x_coord, y_coord);
+}
+
+function rgb(r,g,b) {
+    return 'rgb(' + [(r||0),(g||0),(b||0)].join(',') + ')';
 }

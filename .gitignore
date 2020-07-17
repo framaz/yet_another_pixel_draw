@@ -332,3 +332,7 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Repo specific
+/static/yapd/main.js
+

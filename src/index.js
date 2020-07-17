@@ -7,7 +7,10 @@ import UserName from "./components/UserName";
 ReactDOM.render(
   <div>
     <Canvas />,
-    <UserName loggedIn="{{ request.user.is_authenticated|lower }}" />
+    <UserName loggedIn="{{ request.user.is_authenticated|lower }}" />,
+    <div class="colorSelect">
+
+      </div>
   </div>,
   root
 )
