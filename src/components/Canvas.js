@@ -21,6 +21,8 @@ export default class Canvas extends React.Component {
     this.color = {r: 0, g: 0, b: 0}
     this.lastY = 0;
     this.lastX = 0;
+    this.clickStartX = 0;
+    this.clickStartY = 0;
 
     this.colorChange = this.colorChange.bind(this);
     this.mouseMove = this.mouseMove.bind(this);
@@ -49,14 +51,39 @@ export default class Canvas extends React.Component {
     isMouseDown = true;
     this.lastX = evt.clientX;
     this.lastY = evt.clientY;
+    this.clickStartX = evt.clientX;
+    this.clickStartY = evt.clientY;
   }
   mouseUp(evt) {
     isMouseDown = false;
+    if (this.clickStartX == evt.clientX && this.clickStartY == evt.clientY && this.zoomIn >= 4) {
+        this.pixelDraw(this.clickStartX, this.clickStartY, this.color);
+      }
+  }
+  async pixelDraw(x, y, colorDict) {
+    var curPixelX = Math.floor((x - this.x * this.zoomIn) / this.zoomIn) + 2 * this.x;
+    var curPixelY = Math.floor((y - this.y * this.zoomIn) / this.zoomIn) + 2 * this.y;
+
+    var color = [colorDict.r, colorDict.g, colorDict.b];
+    var data = {
+      'x': curPixelX,
+      'y': curPixelY,
+      'color': JSON.stringify(color)
+    };
+    await fetch(set_pixel, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Content-Type': "application/json",
+        'X-CSRFToken': csrf,
+      },
+      body: JSON.stringify(data),
+    });
+
   }
   colorChange(color) {
+
     this.color = color.rgb;
-  }
-  mouseClick(evt) {
   }
   wheel(evt) {
     evt.persist();

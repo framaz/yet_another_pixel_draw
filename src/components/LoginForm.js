@@ -16,7 +16,6 @@ export default class LoginForm extends React.Component {
     var loginForm = this.formRef.current;
     var data = FormSerialize.serialize(loginForm);
 
-    var csrf = document.getElementsByName("csrfmiddlewaretoken")[0].value;
     document.cookie = "csrftoken=" + csrf;
     data += "&next=" + frontend_url;
     var response = await fetch(login_url, {
