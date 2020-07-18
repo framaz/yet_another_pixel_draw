@@ -9,6 +9,9 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from rest_framework.renderers import JSONRenderer
 
 from yet_another_pixel_draw import serializers
 
@@ -21,6 +24,11 @@ class UpdatePixel(APIView):
         serializer = serializers.CurrentFieldSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(request.user)
+            layer = get_channel_layer()
+            async_to_sync(layer.group_send)('users', {
+                'type': 'new_pixel',
+                'content': JSONRenderer().render(serializer.data)
+            })
             return Response(status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

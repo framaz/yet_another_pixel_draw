@@ -30,6 +30,7 @@
     "webpack-cli": "^3.3.12"
   },
   "dependencies": {
+    "form-serialize": "^0.7.2",
     "react-color": "^2.17.3"
   }
 }
