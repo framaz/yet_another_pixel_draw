@@ -5,6 +5,7 @@ import numpy as np
 from PIL import Image
 from django.core.cache import cache
 from rest_framework import serializers
+from rest_framework.renderers import JSONRenderer
 
 from yet_another_pixel_draw import models
 
@@ -38,6 +39,22 @@ class CurrentFieldSerializer(serializers.ModelSerializer):
         model = models.PixelHistory
         fields = ['x', 'y', 'color']
 
+
+class PixelHistorySerializer(serializers.Serializer):
+    date = serializers.DateTimeField()
+
+    def get(self):
+        if self.is_valid():
+            date = self.validated_data['date']
+            history_data = models.PixelHistory.objects.all().filter(date__gt=date).order_by('date')
+            history_serializer = HistoryElementSerializer(history_data, many=True)
+            res = JSONRenderer().render(history_serializer.data)
+            return res
+
+class HistoryElementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PixelHistory
+        fields = ['x', 'y', 'color', 'date']
 
 class NewFieldSerializer(serializers.Serializer):
     file = serializers.ImageField()

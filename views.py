@@ -41,6 +41,15 @@ class UploadPicture(APIView):
 
 GRID_CACHING = 60
 
+class GetHistory(APIView):
+    def get(self, request):
+        date = request.query_params['date']
+        serializer = serializers.PixelHistorySerializer(data={'date': date})
+        serializer = serializer
+        res = serializer.get()
+        return Response(res, status=status.HTTP_200_OK)
+
+
 
 class GetPixelFromGrid(APIView):
     @method_decorator(cache_page(GRID_CACHING))
