@@ -4,6 +4,7 @@ import GridQueue from "./GridQueue";
 
 var lastX, lastY;
 var isMouseDown = false;
+var gridLoading;
 
 const GRID_SIZE = 128;
 
@@ -16,6 +17,7 @@ export default class Canvas extends React.Component {
     this.zoomIn = 1;
     this.grids = {}
     this.gridLoading = new GridQueue(this);
+    gridLoading = this.gridLoading;
     this.gridLoading.work();
     this.drawColor = []
     this.color = {r: 0, g: 0, b: 0}
@@ -23,6 +25,11 @@ export default class Canvas extends React.Component {
     this.lastX = 0;
     this.clickStartX = 0;
     this.clickStartY = 0;
+    this.pixelHistory = [];
+    this.webSocket = null;
+    this.unusedPixels = [];
+    this.earliestPixelDate = "";
+    this.earliestGridDate = "";
 
     this.colorChange = this.colorChange.bind(this);
     this.mouseMove = this.mouseMove.bind(this);
@@ -127,7 +134,12 @@ export default class Canvas extends React.Component {
       var data = this.gridData[i];
       this.grids[i] = Array(this.gridData);
       for (var j = 0; j < data[0]; j++)
+      {
         this.grids[i][j] = Array(data[1]);
+        for (var k = 0; k < data[1]; k++) {
+          this.grids[i][j][k] = new Grid(i, j, k);
+        }
+      }
     }
     this.forceUpdate();
   }
@@ -157,13 +169,10 @@ export default class Canvas extends React.Component {
     cvx.imageSmoothingEnabled = false;
 
     for (var i = firstGridX; i <= lastGridX; i += 1)
-      for (var j = firstGridY; j <= lastGridY; j += 1)
-        if (this.grids[this.size][i][j] == null)
-          this.gridLoading.append(i, j, this.size);
-        else {
-          var cur_rect = this.grids[this.size][i][j];
-          drawPic(cur_rect, cvx, i * GRID_SIZE - x,j * GRID_SIZE - y);
-    }
+      for (var j = firstGridY; j <= lastGridY; j += 1) {
+        var cur_rect = this.grids[this.size][i][j];
+        drawPic(cur_rect.getPicture(), cvx, i * GRID_SIZE - x,j * GRID_SIZE - y);
+      }
     cvx.drawImage(this.refs.canvas, 0, 0, screenWidth / this.zoomIn, screenHeight / this.zoomIn,
      0, 0, screenWidth, screenHeight);
     if (this.size == 0 && this.zoomIn >= 4) {
@@ -180,7 +189,18 @@ export default class Canvas extends React.Component {
   }
 }
 
-function drawPic(array, ctx, x_coord, y_coord) {
+function drawPic(idata, ctx, x_coord, y_coord) {
+  // update canvas with new data
+  ctx.putImageData(idata, x_coord, y_coord);
+}
+
+function rgb(r,g,b) {
+    return 'rgb(' + [(r||0),(g||0),(b||0)].join(',') + ')';
+}
+
+function arrToPic(array) {
+  var canvas = document.createElement('canvas'),
+      ctx = canvas.getContext('2d');
   var width = array.length,
     height = array[0].length,
     buffer = new Uint8ClampedArray(width * height * 4);
@@ -195,14 +215,51 @@ function drawPic(array, ctx, x_coord, y_coord) {
     }
   }
   var idata = ctx.createImageData(width, height);
+  canvas.delete
 
   // set our buffer as source
   idata.data.set(buffer);
-
-  // update canvas with new data
-  ctx.putImageData(idata, x_coord, y_coord);
+  canvas.remove();
+  return idata;
 }
 
-function rgb(r,g,b) {
-    return 'rgb(' + [(r||0),(g||0),(b||0)].join(',') + ')';
+class Grid {
+  static gridQueue;
+  constructor(size, x, y){
+    this.size = size;
+    this.x = x;
+    this.y = y;
+
+    this.gridNonPicArray = null;
+    this.date = null;
+    this.picture = null;
+    this.pixelsToDraw = []
+  }
+  loadGrid(gridNonPicArray) {
+    this.gridNonPicArray = gridNonPicArray;
+  }
+  drawPixel(x, y, color) {
+    this.pixelsToDraw.push({x: x, y: y, color: color});
+  }
+  getPicture(){
+    if (this.picture == null ) {
+      if (this.gridNonPicArray == null) {
+        gridLoading.append(this.x, this.y, this.size);
+        return new ImageData(GRID_SIZE, GRID_SIZE);
+      }
+      else {
+        this.picture = arrToPic(this.gridNonPicArray);
+      }
+    }
+    if (this.pixelsToDraw.length > 0) {
+      while (this.pixelsToDraw.length > 0) {
+        let pixel = this.pixelsToDraw.pop();
+        let onArrX = pixel.x - this.x * (2 ** this.size) * GRID_SIZE;
+        let onArrY = pixel.y - this.y * (2 ** this.size) * GRID_SIZE;
+        this.gridNonPicArray[x][y] = pixel.color;
+      }
+      this.picture = arrToPic(this.gridNonPicArray);
+    }
+    return this.picture;
+  }
 }

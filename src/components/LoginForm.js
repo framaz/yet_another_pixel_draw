@@ -1,4 +1,7 @@
 import React from "react";
+var serialize = require('form-serialize');
+var FormSerialize = {};
+FormSerialize.serialize = serialize;
 
 export default class LoginForm extends React.Component {
   constructor(props) {
