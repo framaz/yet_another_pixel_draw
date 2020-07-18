@@ -27,7 +27,7 @@ class UpdatePixel(APIView):
             layer = get_channel_layer()
             async_to_sync(layer.group_send)('users', {
                 'type': 'new_pixel',
-                'content': JSONRenderer().render(serializer.data)
+                'content': JSONRenderer().render(serializer.validated_data)
             })
             return Response(status=status.HTTP_200_OK)
         else:
@@ -60,7 +60,7 @@ class GetHistory(APIView):
 
 
 class GetPixelFromGrid(APIView):
-    @method_decorator(cache_page(GRID_CACHING))
+    #@method_decorator(cache_page(GRID_CACHING))
     def get(self, request, size, x, y, format=None):
         serializer = serializers.GetGridSerializer(data={"x": x, "size": size, "y": y})
         if serializer.is_valid():
@@ -70,7 +70,7 @@ class GetPixelFromGrid(APIView):
 
 
 class GetGridSize(APIView):
-    @method_decorator(cache_page(GRID_CACHING))
+    #@method_decorator(cache_page(GRID_CACHING))
     def get(self, request, format=None):
         res = {}
         for i in range(serializers.MAX_GRID_SIZE):

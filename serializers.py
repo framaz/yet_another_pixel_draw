@@ -14,11 +14,17 @@ MAX_GRID_SIZE = 10
 
 
 class CurrentFieldSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(**kwargs)
+        self.date = None
+
     def save(self, user):
         x = self.validated_data['x']
         y = self.validated_data['y']
         color = self.validated_data['color']
-        models.PixelHistory.objects.create(x=x, y=y, color=color, user=user)
+        pixel = models.PixelHistory.objects.create(x=x, y=y, color=color, user=user)
+        self.date = pixel.date
+        self.validated_data['date'] = self.date
         color = np.array(loads(color))
 
         x_grid, x_in_grid = divmod(x, SMALLEST_SQUARE_SIZE)
