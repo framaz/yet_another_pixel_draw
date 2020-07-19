@@ -65,6 +65,8 @@ class GetPixelFromGrid(APIView):
         serializer = serializers.GetGridSerializer(data={"x": x, "size": size, "y": y})
         if serializer.is_valid():
             field = serializer.get_proper_field()
+            serializer.is_valid()
+            serializer.save(field)
             return Response(data=dumps(field.tolist()), status=status.HTTP_200_OK)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

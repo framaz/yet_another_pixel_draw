@@ -20,7 +20,7 @@ class CurrentField(models.Model):
     x = models.IntegerField(null=False)
     y = models.IntegerField(null=False)
     size = models.IntegerField(null=False)
-    image = models.BinaryField(max_length=1000000)
+    image = models.BinaryField(max_length=10000)
     date = models.DateTimeField(auto_now=True)
 
     class Meta:
