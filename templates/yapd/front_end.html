@@ -17,6 +17,7 @@
 {% csrf_token %}
 <script type="application/javascript">
 const csrf = document.getElementsByName("csrfmiddlewaretoken")[0].value;
+const pixel_websocket_url = 'ws://'+window.location.host+'/ws/pixel_updater/';
 const get_grid_size_url = "{% url 'get_grid_size' %}";
 const frontend_url = "{% url 'frontend' %}";
 const login_url = "{% url "login" %}";

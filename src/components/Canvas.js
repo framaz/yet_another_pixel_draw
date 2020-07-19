@@ -31,12 +31,29 @@ export default class Canvas extends React.Component {
     this.earliestPixelDate = "";
     this.earliestGridDate = "";
 
+    this.newPixelWebsocket = this.newPixelWebsocket.bind(this);
     this.colorChange = this.colorChange.bind(this);
     this.mouseMove = this.mouseMove.bind(this);
     this.mouseDown = this.mouseDown.bind(this);
     this.mouseUp = this.mouseUp.bind(this);
     this.wheel = this.wheel.bind(this);
   }
+  newPixelWebsocket(event) {
+    var data = JSON.parse(JSON.parse(event.data));
+    this.newPixel(data.x, data.y, JSON.parse(data.color), new Date(data.date));
+    this.forceUpdate();
+  }
+  newPixel(x, y, color, data)
+  {
+    let gridX = Math.floor(x / GRID_SIZE / (2 ** this.size));
+    let gridY = Math.floor(y / GRID_SIZE / (2 ** this.size));
+    for (var gridSize=0; gridSize<10; gridSize++) {
+      let gridX = Math.floor(x / GRID_SIZE / (2 ** this.size));
+      let gridY = Math.floor(y / GRID_SIZE / (2 ** this.size));
+      this.grids[this.size][gridX][gridY].drawPixel(x, y, color);
+    }
+  }
+  ;
   move(additionalX, additionalY) {
     this.x -= additionalX;
     this.y -= additionalY;
@@ -141,6 +158,8 @@ export default class Canvas extends React.Component {
         }
       }
     }
+    this.webSocket = new WebSocket(pixel_websocket_url);
+    this.webSocket.addEventListener('message', this.newPixelWebsocket);
     this.forceUpdate();
   }
   componentDidUpdate() {
@@ -256,7 +275,10 @@ class Grid {
         let pixel = this.pixelsToDraw.pop();
         let onArrX = pixel.x - this.x * (2 ** this.size) * GRID_SIZE;
         let onArrY = pixel.y - this.y * (2 ** this.size) * GRID_SIZE;
-        this.gridNonPicArray[x][y] = pixel.color;
+        let newColor = [0, 0, 0]
+        for (let i = 0; i < 3; i++)
+          newColor[i] = (this.gridNonPicArray[onArrX][onArrY][i] * ((4 ** this.size) - 1) + pixel.color[i]) / 4 ** this.size;
+        this.gridNonPicArray[onArrX][onArrY] = newColor;
       }
       this.picture = arrToPic(this.gridNonPicArray);
     }
