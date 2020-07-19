@@ -26,3 +26,21 @@ canvas {
   right: 0px;
   bottom: 0px;
 }
+
+.preload {
+  z-index: 100;
+  position: fixed;
+  right: 0px;
+  bottom: 0px;
+  width: 100vw;
+  height: 100vh;
+  background: #ffbd17;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size 36px;
+}
+
+.preloadText {
+  flex: 0 0 auto;
+}

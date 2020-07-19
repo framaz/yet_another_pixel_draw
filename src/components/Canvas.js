@@ -1,6 +1,7 @@
 import React from "react";
 import { ChromePicker } from 'react-color';
 import GridQueue from "./GridQueue";
+import PreloadComponent from "./PreloadComponent";
 
 var lastX, lastY;
 var isMouseDown = false;
@@ -132,6 +133,7 @@ export default class Canvas extends React.Component {
   render() {
     return (
     <div>
+      <PreloadComponent ref='preload' />
       <div class='colorSelect'>
         <ChromePicker disableAlpha={true} color={this.color} onChange={this.colorChange}/>
       </div>
@@ -160,6 +162,7 @@ export default class Canvas extends React.Component {
     }
     this.webSocket = new WebSocket(pixel_websocket_url);
     this.webSocket.addEventListener('message', this.newPixelWebsocket);
+    this.refs.preload.setState({mounted: false});
     this.forceUpdate();
   }
   componentDidUpdate() {
