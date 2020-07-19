@@ -77,6 +77,9 @@ class NewFieldSerializer(serializers.Serializer):
         pil_img = Image.open(pil_img)
         pil_img = pil_img.convert(mode="RGB")
         img = np.array(pil_img)
+        img = img.transpose(1, 0, 2)
+        pil_img = Image.fromarray(img)
+
         models.CurrentField.objects.all().delete()
         img_split_and_cache(img)
 
