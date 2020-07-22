@@ -31,8 +31,3 @@ class CurrentField(models.Model):
             models.Index(fields=['x', 'y', 'size'], name="index")
         ]
 
-
-class FieldHistory(models.Model):
-    field = models.BinaryField()
-    date = models.DateTimeField(auto_now=True)
-    user = models.ForeignKey(User, null=True, default=None, on_delete=models.DO_NOTHING)
