@@ -36,7 +36,7 @@ class UpdatePixel(APIView):
         Returns:
             Operation code status.
         """
-        serializer = serializers.CurrentFieldSerializer(data=request.data)
+        serializer = serializers.PixelUpdateSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(request.user)
             layer = get_channel_layer()
@@ -100,9 +100,9 @@ class GetGridElement(APIView):
     # @method_decorator(cache_page(GRID_CACHING))
     def get(self, request, size: int, x: int, y: int, format=None):
         """Get grid element by it's layer and (x, y) coordinates."""
-        serializer = serializers.GetGridSerializer(data={"x": x, "size": size, "y": y})
+        serializer = serializers.GetGridElementSerializer(data={"x": x, "size": size, "y": y})
         if serializer.is_valid():
-            field = serializer.get_proper_field()
+            field = serializer.get_grid_element_arr()
             serializer.is_valid()
             serializer.save(field)
             return Response(data=dumps(field.tolist()), status=status.HTTP_200_OK)
@@ -121,7 +121,7 @@ class GetGridSize(APIView):
     def get(self, request, format=None):
         """Get grid sizes."""
         res = {}
-        for i in range(serializers.MAX_GRID_SIZE):
+        for i in range(serializers.TOTAL_GIRD_LAYERS):
             res[i] = cache.get(f"grid_size_{i}")
             res[i] = [*(res[i])]
         return Response(data=dumps(res), status=status.HTTP_200_OK)
